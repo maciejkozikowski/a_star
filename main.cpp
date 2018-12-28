@@ -6,29 +6,39 @@
 #include <cstdlib>
 #include <list>
 #include <algorithm>
+#include <float.h>
 using namespace std;
-class Punkt
-{
-    public:
-        int x; //współrzędna x
-        int y; //współrzędna y
-        int znak; //wartość pola (1 to start, 9 meta, 5 blokada, 3 trasa
-        int koszt=0; //koszt dotarcia do pola
-        int rodzicX; //pozycja X rodzica
-        int rodzicY; //pozycja Y rodzica
-        double h; //heurystyka tego pola
-        bool visited = false;
-};
-
 int wym2 = 20;
 int wym1 = 20;
-Punkt mapa[20][20];
 int startX = 0;
 int startY = 0;
 int celX=0;
 int celY=0;
 int nowX = 0;
 int nowY = 0;
+class Punkt
+{
+    public:
+        int x; //współrzędna x
+        int y; //współrzędna y
+        int znak; //wartość pola (1 to start, 9 meta, 5 blokada, 3 trasa
+        int g=0; //koszt dotarcia do pola
+        int rodzicX; //pozycja X rodzica
+        int rodzicY; //pozycja Y rodzica
+        double h; //heurystyka tego pola
+        bool visited = false;
+        double heur()
+        {
+            this->h=sqrt(pow((this->x-celX),2) + pow((this->y - celY),2));
+        }
+        bool operator == (const Punkt& p) const { return x==p.x && y==p.y; }
+        bool operator != (const Punkt& p) const { return !operator==(p); }
+
+};
+
+    list<Punkt> listaO;
+    list<Punkt> listaZ;
+Punkt mapa[20][20];
 double h(Punkt start, Punkt cel)
 {
         double wynik = sqrt(pow((start.x-cel.x),2) + pow((start.y - cel.y),2));
@@ -130,48 +140,144 @@ void PobierzStartCel()
     cout<<"\n";
     }
 }
-void SearchUp(list<Punkt> listaO, list<Punkt>::iterator it)
+void SearchUp()
+{
+    if(nowY>0 && mapa[nowX][nowY-1].znak!=5 ){
+        listaO.push_front(mapa[nowX][nowY-1]);
+        list<Punkt>::iterator it=listaO.begin();
+        it->heur();
+        it->rodzicX = nowX;
+        it->rodzicY = nowY;
+        it->g = it->g+1;
+        cout<<it->x<<endl;
+            cout<<it->y<<endl;
+            cout<<it->znak<<endl;
+            cout<<it->h<<endl<<endl;
+    }
+}
+void SearchDown()
+{
+    if(nowY<wym2 && mapa[nowX][nowY+1].znak != 5){
+        listaO.push_front(mapa[nowX][nowY+1]);
+        list<Punkt>::iterator it=listaO.begin();
+        it->heur();
+        it->rodzicX = nowX;
+        it->rodzicY = nowY;
+        it->g = it->g+1;
+        cout<<it->x<<endl;
+            cout<<it->y<<endl;
+            cout<<it->znak<<endl;
+            cout<<it->h<<endl<<endl;
+    }
+}
+void SearchLeft()
+{
+    if(nowX>0 && mapa[nowX-1][nowY].znak != 5){
+        listaO.push_front(mapa[nowX-1][nowY]);
+        list<Punkt>::iterator it=listaO.begin();
+        it->heur();
+        it->rodzicX = nowX;
+        it->rodzicY = nowY;
+        it->g = it->g+1;
+        cout<<it->x<<endl;
+            cout<<it->y<<endl;
+            cout<<it->znak<<endl;
+            cout<<it->h<<endl<<endl;
+    }
+}
+void SearchRight()
+{
+    if(nowX<wym1 && mapa[nowX+1][nowY].znak != 5){
+        listaO.push_front(mapa[nowX+1][nowY]);
+        list<Punkt>::iterator it=listaO.begin();
+        it->heur();
+        it->rodzicX = nowX;
+        it->rodzicY = nowY;
+        it->g = it->g+1;
+        cout<<it->x<<endl;
+            cout<<it->y<<endl;
+            cout<<it->znak<<endl;
+            cout<<it->h<<endl<<endl;
+    }
+}
+void SearchAdjacent()
+{
+    SearchUp();
+    SearchDown();
+    SearchLeft();
+    SearchRight();
+}
+
+void MoveUp()
 {
 
 }
-void SearchDown(list<Punkt> listaO, list<Punkt>::iterator it)
+void MoveDown()
 {
 
 }
-void SearchLeft(list<Punkt> listaO, list<Punkt>::iterator it)
+void MoveLeft()
 {
 
 }
-void SearchRight(list<Punkt> listaO, list<Punkt>::iterator it)
+void MoveRight()
 {
 
 }
-void SearchAdjacent(list<Punkt> listaO, list<Punkt>::iterator it)
+void Move()
 {
-    SearchUp(listaO, it);
-    SearchDown(listaO, it);
-    SearchLeft(listaO, it);
-    SearchRight(listaO, it);
+    double najmnHeur=listaO.begin()->h;
+    for(list<Punkt>::iterator it=listaO.begin(); it!=listaO.end(); it++)
+    {
+        if(it->h<najmnHeur)
+            najmnHeur = it->h;
+    }
+    for(list<Punkt>::iterator it=listaO.begin(); it!=listaO.end(); it++)
+    {
+        if(it->h==najmnHeur)
+        {
+            listaZ.push_back(mapa[it->x][it->y]);
+            //it->h=DBL_MAX;
+            listaO.erase(it);
+            break;
+        }
+
+    }
 }
 void trasa()
 {
-    list<Punkt> listaO;
-    list<Punkt> listaZ;
     listaZ.push_back(mapa[startX][startY]);
     list<Punkt>::iterator itZ = listaZ.begin();
-    cout<<itZ->x<<endl;
-    cout<<itZ->y<<endl;
-    cout<<itZ->znak<<endl;
-    listaZ.push_back(mapa[celX][celY]);
-    advance(itZ, 1);
-    cout<<itZ->x<<endl;
-    cout<<itZ->y<<endl;
-    cout<<itZ->znak<<endl;
-    cout<<mapa[itZ->x][itZ->y].znak;
-    listaO.push_back(mapa[nowX][nowY-1]);
+    cout<<mapa[itZ->x][itZ->y].znak<<endl;
     list<Punkt>::iterator itO = listaO.begin();
-    itO->h = h(mapa[itO->x][itO->y], mapa[celX][celY]);
-    cout<<itO->h;
+    SearchAdjacent();
+    for(itO=listaO.begin(); itO!=listaO.end(); ++itO)
+        {
+            cout<<itO->x<<endl;
+            cout<<itO->y<<endl;
+            cout<<itO->znak<<endl;
+            cout<<itO->h<<endl<<endl;
+        }
+    /*while(nowX!=celX && nowY!=celY)
+    {
+        SearchAdjacent(listaO, itO);
+
+    }*/
+    Move();
+    itZ = listaZ.begin();
+    cout<<itZ->x<<endl;
+    cout<<itZ->y<<endl;
+    itZ++;
+    cout<<itZ->x<<endl;
+    cout<<itZ->y<<endl;
+    Move();
+    itZ = listaZ.begin();
+    cout<<itZ->x<<endl;
+    cout<<itZ->y<<endl;
+    itZ++;
+    itZ++;
+    cout<<itZ->x<<endl;
+    cout<<itZ->y<<endl;
 
 }
 int main()

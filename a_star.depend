@@ -1,5 +1,5 @@
 # depslib dependency file v1.0
-1545488802 source:d:\a_star\main.cpp
+1546017689 source:d:\a_star\main.cpp
 	<iostream>
 	<stdio.h>
 	<fstream>
