@@ -26,10 +26,12 @@ class Punkt
         int rodzicX; //pozycja X rodzica
         int rodzicY; //pozycja Y rodzica
         double h; //heurystyka tego pola
+        double f; //heurystyka + koszt;
         bool visited = false;
         double heur()
         {
             this->h=sqrt(pow((this->x-celX),2) + pow((this->y - celY),2));
+            this->f=this->h + g;
         }
         bool operator == (const Punkt& p) const { return x==p.x && y==p.y; }
         bool operator != (const Punkt& p) const { return !operator==(p); }
@@ -142,62 +144,79 @@ void PobierzStartCel()
 }
 void SearchUp()
 {
-    if(nowY>0 && mapa[nowX][nowY-1].znak!=5 ){
+    if(nowY>0 && mapa[nowX][nowY-1].znak!=5 && mapa[nowX][nowY-1].visited == false){
         listaO.push_front(mapa[nowX][nowY-1]);
         list<Punkt>::iterator it=listaO.begin();
         it->heur();
+        mapa[it->x][it->y].rodzicX = nowX;
+        mapa[it->x][it->y].rodzicY = nowY;
         it->rodzicX = nowX;
         it->rodzicY = nowY;
+
         it->g = it->g+1;
         cout<<it->x<<endl;
             cout<<it->y<<endl;
             cout<<it->znak<<endl;
-            cout<<it->h<<endl<<endl;
+            cout<<it->h<<endl;
+            cout<<mapa[it->x][it->y].rodzicX<<endl;
+            cout<<mapa[it->x][it->y].rodzicY<<endl<<endl;
     }
 }
 void SearchDown()
 {
-    if(nowY<wym2 && mapa[nowX][nowY+1].znak != 5){
+    if(nowY<wym2 && mapa[nowX][nowY+1].znak != 5 && mapa[nowX][nowY+1].visited == false){
         listaO.push_front(mapa[nowX][nowY+1]);
         list<Punkt>::iterator it=listaO.begin();
         it->heur();
+        mapa[it->x][it->y].rodzicX = nowX;
+        mapa[it->x][it->y].rodzicY = nowY;
         it->rodzicX = nowX;
         it->rodzicY = nowY;
         it->g = it->g+1;
         cout<<it->x<<endl;
             cout<<it->y<<endl;
             cout<<it->znak<<endl;
-            cout<<it->h<<endl<<endl;
+            cout<<it->h<<endl;
+            cout<<mapa[it->x][it->y].rodzicX<<endl;
+            cout<<mapa[it->x][it->y].rodzicY<<endl<<endl;
     }
 }
 void SearchLeft()
 {
-    if(nowX>0 && mapa[nowX-1][nowY].znak != 5){
+    if(nowX>0 && mapa[nowX-1][nowY].znak != 5 && mapa[nowX-1][nowY].visited == false){
         listaO.push_front(mapa[nowX-1][nowY]);
         list<Punkt>::iterator it=listaO.begin();
         it->heur();
+        mapa[it->x][it->y].rodzicX = nowX;
+        mapa[it->x][it->y].rodzicY = nowY;
         it->rodzicX = nowX;
         it->rodzicY = nowY;
         it->g = it->g+1;
         cout<<it->x<<endl;
             cout<<it->y<<endl;
             cout<<it->znak<<endl;
-            cout<<it->h<<endl<<endl;
+            cout<<it->h<<endl;
+            cout<<mapa[it->x][it->y].rodzicX<<endl;
+            cout<<mapa[it->x][it->y].rodzicY<<endl<<endl;
     }
 }
 void SearchRight()
 {
-    if(nowX<wym1 && mapa[nowX+1][nowY].znak != 5){
+    if(nowX<wym1 && mapa[nowX+1][nowY].znak != 5 && mapa[nowX+1][nowY].visited == false){
         listaO.push_front(mapa[nowX+1][nowY]);
         list<Punkt>::iterator it=listaO.begin();
         it->heur();
+        mapa[it->x][it->y].rodzicX = nowX;
+        mapa[it->x][it->y].rodzicY = nowY;
         it->rodzicX = nowX;
         it->rodzicY = nowY;
         it->g = it->g+1;
         cout<<it->x<<endl;
             cout<<it->y<<endl;
             cout<<it->znak<<endl;
-            cout<<it->h<<endl<<endl;
+            cout<<it->h<<endl;
+            cout<<mapa[it->x][it->y].rodzicX<<endl;
+            cout<<mapa[it->x][it->y].rodzicY<<endl<<endl;
     }
 }
 void SearchAdjacent()
@@ -208,49 +227,59 @@ void SearchAdjacent()
     SearchRight();
 }
 
-void MoveUp()
-{
-
-}
-void MoveDown()
-{
-
-}
-void MoveLeft()
-{
-
-}
-void MoveRight()
-{
-
-}
 void Move()
 {
     double najmnHeur=listaO.begin()->h;
     for(list<Punkt>::iterator it=listaO.begin(); it!=listaO.end(); it++)
     {
-        if(it->h<najmnHeur)
-            najmnHeur = it->h;
+        if(it->f<najmnHeur)
+            najmnHeur = it->f;
     }
     for(list<Punkt>::iterator it=listaO.begin(); it!=listaO.end(); it++)
     {
-        if(it->h==najmnHeur)
+        if(it->f==najmnHeur)
         {
-            listaZ.push_back(mapa[it->x][it->y]);
+            listaZ.push_front(mapa[it->x][it->y]);
             //it->h=DBL_MAX;
+            nowX = it->x;
+            nowY = it->y;
+            mapa[it->x][it->y].visited = true;
+
             listaO.erase(it);
+
             break;
         }
 
     }
 }
+void Cofaj()
+{
+    list<Punkt>::iterator it = listaZ.begin();
+    nowX = celX;
+    nowY = celY;
+    while(nowX!=startX && nowY!=startY)
+    {
+        for(it = listaZ.begin(); it!=listaZ.end(); it++)
+        {
+            if(it->x == nowX && it->y == nowY)
+            {
+                mapa[nowX][nowY].znak=3;
+                nowX = it->rodzicX;
+                nowY = it->rodzicY;
+                listaZ.erase(it);
+            }
+        }
+    }
+}
 void trasa()
 {
-    listaZ.push_back(mapa[startX][startY]);
+    listaZ.push_front(mapa[startX][startY]);
     list<Punkt>::iterator itZ = listaZ.begin();
     cout<<mapa[itZ->x][itZ->y].znak<<endl;
     list<Punkt>::iterator itO = listaO.begin();
+    /*
     SearchAdjacent();
+    cout<<"pierwsze przeszukanie"<<endl<<endl<<endl;
     for(itO=listaO.begin(); itO!=listaO.end(); ++itO)
         {
             cout<<itO->x<<endl;
@@ -258,27 +287,54 @@ void trasa()
             cout<<itO->znak<<endl;
             cout<<itO->h<<endl<<endl;
         }
-    /*while(nowX!=celX && nowY!=celY)
+    while(nowX!=celX && nowY!=celY)
     {
         SearchAdjacent(listaO, itO);
 
-    }*/
+    }
+    cout<<endl<<endl<<endl;
     Move();
     itZ = listaZ.begin();
-    cout<<itZ->x<<endl;
-    cout<<itZ->y<<endl;
-    itZ++;
-    cout<<itZ->x<<endl;
-    cout<<itZ->y<<endl;
-    Move();
-    itZ = listaZ.begin();
-    cout<<itZ->x<<endl;
-    cout<<itZ->y<<endl;
-    itZ++;
-    itZ++;
     cout<<itZ->x<<endl;
     cout<<itZ->y<<endl;
 
+    SearchAdjacent();
+    cout<<"drugie przeszukanie"<<endl<<endl<<endl;
+    Move();
+    itZ = listaZ.begin();
+    cout<<itZ->x<<endl;
+    cout<<itZ->y<<endl;
+*/
+
+
+
+    itZ = listaZ.begin();
+    do
+    {
+        SearchAdjacent();
+        Move();
+        itZ=listaZ.begin();
+        mapa[itZ->x][itZ->y].visited=true;
+        mapa[itZ->x][itZ->y].znak=3;
+    }while(itZ->x != celX && itZ->y != celY);
+
+
+    for(int i=0;i<wym2+1;i++)
+    {
+        for(int j=0;j<wym1+1;j++)
+        {
+            cout<<" "<<mapa[i][j].znak;
+
+        }
+    cout<<"\n";
+    }
+
+
+    listaZ.push_front(mapa[2][2]);
+    itZ = listaZ.begin();
+    mapa[2][2].visited = true;
+    cout<<mapa[2][2].visited;
+    cout<<itZ->visited;
 }
 int main()
 {
